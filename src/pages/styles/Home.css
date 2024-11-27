@@ -19,40 +19,40 @@ body {
 }
 
 .section-title {
-  font-size: 24px;
+  font-size: 30px;
   color: #555;
   margin-bottom: 20px;
   text-align: left;
-  margin-left: 20px;
+  margin-left: 40px;
 }
 
 .slider-container {
   position: relative;
   width: 100%;
-  max-width: 1920px; /* 화면 너비에 맞춤 */
+  max-width: 1920px;
   margin: 10px auto 50px auto;
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding: 0 40px; /* 좌우 여백 추가 */
+  padding: 0 40px;
 }
 
 .slider {
   display: flex;
-  gap: 15px; /* 카드 간격 */
+  gap: 15px;
   overflow: hidden;
-  width: 100%; /* 슬라이더 전체 폭 */
+  width: 100%;
 }
 
 .slider > * {
-  flex: 0 0 calc(20% - 20px); /* 한 줄에 5개 */
+  flex: 0 0 calc(20% - 20px);
   max-width: calc(20% - 20px);
-  height: 350px; /* 높이 조정 */
+  height: 350px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 카드 크기 증가 */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
   gap: 50px;
   margin-top: 20px;
 }
@@ -65,7 +65,7 @@ body {
   text-align: center;
   padding: 16px;
   transition: transform 0.2s, box-shadow 0.2s;
-  height: 350px; /* 카드 높이 증가 */
+  height: 350px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -87,7 +87,7 @@ body {
 
 .thumbnail img {
   background-color: #e0e0e0;
-  height: 200px; /* 이미지 높이 증가 */
+  height: 200px;
   width: 100%;
   border-radius: 8px;
   object-fit: cover;

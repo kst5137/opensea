@@ -2,52 +2,48 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/Home.css";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "http://127.0.0.1:8000/posts";
 
 const Home = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [rankingItems, setRankingItems] = useState([]);
-  const [recentPosts, setRecentPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [currentLikeIndex, setCurrentLikeIndex] = useState(0);
+	const [rankingItems, setRankingItems] = useState([]);
+	const [likeRankingItems, setLikeRankingItems] = useState([]);
+	const [recentPosts, setRecentPosts] = useState([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        // 상위 10개 랭킹 데이터 가져오기
-        const rankingResponse = await fetch(`${API_BASE_URL}/ranking`);
-        if (!rankingResponse.ok) {
-          throw new Error("Failed to fetch ranking data");
-        }
-        const rankingData = await rankingResponse.json();
-
-        // 최신 8개 포스트 데이터 가져오기
-        const recentResponse = await fetch(`${API_BASE_URL}/recent-posts`);
-        if (!recentResponse.ok) {
-          throw new Error("Failed to fetch recent posts data");
-        }
-        const recentData = await recentResponse.json();
-
-        // 상태 업데이트
-        setRankingItems(rankingData);
-        setRecentPosts(recentData);
-
-        // 데이터 확인용 로그
-        console.log("Ranking Data:", rankingData);
-        console.log("Recent Posts Data:", recentData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setRankingItems([]);
-        setRecentPosts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+	useEffect(() => {
+		const fetchData = async () => {
+		  try {
+			setIsLoading(true);
+			const [rankingResponse, recentResponse, likeRankingResponse] = await Promise.all([
+			  fetch(`${API_BASE_URL}/ranking`),
+			  fetch(`${API_BASE_URL}/recent-posts`), 
+			  fetch(`${API_BASE_URL}/like-ranking`)
+			]);
+	   
+			const [rankingData, recentData, likeRankingData] = await Promise.all([
+			  rankingResponse.json(),
+			  recentResponse.json(),
+			  likeRankingResponse.json()
+			]);
+	   
+			setRankingItems(rankingData);
+			setRecentPosts(recentData);
+			setLikeRankingItems(likeRankingData);
+		  } catch (error) {
+			console.error("Error:", error);
+			setRankingItems([]);
+			setRecentPosts([]);
+			setLikeRankingItems([]);
+		  } finally {
+			setIsLoading(false);
+		  }
+		};
+	   
+	fetchData();
+	   }, []);
 
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -85,7 +81,7 @@ const Home = () => {
         
         {/* Ranking Section */}
         <section className="ranking-section">
-          <h2 className="section-title">Ranking</h2>
+          <h2 className="section-title">Price Ranking</h2>
           <div className="slider-container">
             <button
               className="arrow left-arrow"
@@ -103,17 +99,17 @@ const Home = () => {
                 >
                   <div className="thumbnail">
                     <img
-                      src={nft?.img_url || "/placeholder.jpg"} // FastAPI img_url 필드 사용
-                      alt={nft?.item_name || "NFT"} // FastAPI item_name 필드 사용
+                      src={nft?.img_url || "/placeholder.jpg"} 
+                      alt={nft?.item_name || "NFT"}
                       onError={(e) => {
-                        e.target.src = "/placeholder.jpg"; // 이미지 로드 실패 시 대체 이미지
+                        e.target.src = "/placeholder.jpg";
                       }}
                     />
                   </div>
                   <div className="details">
                     <h3>{nft?.item_name || "Unnamed NFT"}</h3>
                     <p className="price" style={{ color: "#2081e2", fontWeight: "bold" }}>
-                      Price: {Number(nft?.expected_price || 0).toFixed(2)} ETH
+                      Price: {Number(nft?.sold_price || 0).toFixed(2)} ETH
                     </p>
                   </div>
                 </div>
@@ -128,7 +124,51 @@ const Home = () => {
             </button>
           </div>
         </section>
-        
+
+        {/* Like Ranking Section */}
+		<section className="ranking-section">
+			<h2 className="section-title">Like Ranking</h2>
+			<div className="slider-container">
+				<button
+					className="arrow left-arrow"
+					onClick={handlePrev}
+					disabled={currentLikeIndex === 0}
+				>
+					◀
+				</button>
+				<div className="slider">
+					{likeRankingItems.slice(currentLikeIndex, currentLikeIndex + 5).map((nft, idx) => (
+					<div
+						key={`like-ranking-${idx}-${nft?.id || Math.random()}`}
+						className="card"
+						onClick={() => handleNFTClick(nft)}
+					>
+						<div className="thumbnail">
+						<img
+							src={nft?.img_url || "/placeholder.jpg"} 
+							alt={nft?.item_name || "NFT"}
+							onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+						/>
+						</div>
+						<div className="details">
+						<h3>{nft?.item_name || "Unnamed NFT"}</h3>
+						<p className="likes" style={{ color: "#2081e2", fontWeight: "bold" }}>
+							Likes: {nft?.like_count || 0}
+						</p>
+						</div>
+					</div>
+					))}
+				</div>
+				<button
+					className="arrow right-arrow"
+					onClick={handleNext}
+					disabled={currentLikeIndex + 5 >= likeRankingItems.length}
+				>
+					▶
+				</button>
+				</div>
+				</section>
+
         {/* Recent Posts Section */}
         <section className="post-section">
           <h2 className="section-title">Recent Posts</h2>
@@ -140,17 +180,17 @@ const Home = () => {
               >
                 <div className="thumbnail">
                   <img
-                    src={nft?.img_url || "/placeholder.jpg"} // FastAPI img_url 필드 사용
-                    alt={nft?.item_name || "NFT"} // FastAPI item_name 필드 사용
+                    src={nft?.img_url || "/placeholder.jpg"}
+                    alt={nft?.item_name || "NFT"} 
                     onError={(e) => {
-                      e.target.src = "/placeholder.jpg"; // 이미지 로드 실패 시 대체 이미지
+                      e.target.src = "/placeholder.jpg";
                     }}
                   />
                 </div>
                 <div className="details">
                   <h3>{nft?.item_name || "Unnamed NFT"}</h3>
                   <p className="price" style={{ color: "#2081e2", fontWeight: "bold" }}>
-                    Price: {Number(nft?.expected_price || 0).toFixed(2)} ETH
+                    Price: {Number(nft?.sold_price || 0).toFixed(2)} ETH
                   </p>
                 </div>
               </div>
