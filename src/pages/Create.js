@@ -17,6 +17,9 @@ function Create() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
+  const token = localStorage.getItem('access_token');
+  const testUser = JSON.parse(localStorage.getItem('user_email'));
+
   const ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
     "image/png",
@@ -26,7 +29,7 @@ function Create() {
     "image/webp",
   ];
 
-  const testUser = "testuser@test.com";
+
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -270,101 +273,108 @@ function Create() {
   };
 
   return (
-    <div className="createContainer">
-      {loading && (
-        <div className="modalOverlay">
-          <div className="modalContent">
-            <h2 className="modalText">Uploading...</h2>
-          </div>
-        </div>
-      )}
-      <h2>Create New Item</h2>
-      <p>Turn your image and metadata into extraordinary NFTs.</p>
-
-      <div className="uploadContainer">
-        {/* 이미지 업로드 영역 */}
-        <div
-          className={`uploadArea ${isDraggingImage ? "dragging" : ""}`}
-          onClick={() => imageFileInputRef.current?.click()}
-          onDragEnter={handleImageDragEnter}
-          onDragOver={handleImageDragOver}
-          onDragLeave={handleImageDragLeave}
-          onDrop={handleImageDrop}
-        >
-          {!imagePreview ? (
-            <p className="uploadText">
-              Drag and drop media
-              <br />
-              <span
-                className="browseTextContainer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  imageFileInputRef.current.click();
-                }}
-              >
-                <span className="browseText">Browse files</span>
-                <input
-                  ref={imageFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleChangeImgSrc(e.target)}
-                  className="fileInput"
-                />
-              </span>
-            </p>
-          ) : (
-            <div className="uploadPreview">
-              <img
-                src={imagePreview}
-                alt="Uploaded preview"
-                className="previewImage"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 새로운 메타데이터 입력 필드 */}
-        <div className="metadataContainer">
-          <h4>Metadata</h4>
-          <div className="inputGroup">
-            <label htmlFor="nftName">Name:</label>
-            <input
-              type="text"
-              id="nftName"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter NFT name"
-              className="textInput"
-            />
-          </div>
-          <div className="inputGroup">
-            <label htmlFor="nftDescription">Description:</label>
-            <textarea
-              id="nftDescription"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter NFT description"
-              className="textareaInput"
-            />
-          </div>
+    <div className="Create">
+      <div className={token ? "hidden" : ""}>
+        <div className="alert alert-danger" role="alert">
+          먼저 로그인을 해주세요.
         </div>
       </div>
+      <div className={!token ? "hidden" : "createContainer"}>
+        {loading && (
+          <div className="modalOverlay">
+            <div className="modalContent">
+              <h2 className="modalText">Uploading...</h2>
+            </div>
+          </div>
+        )}
+        <h2>Create New Item</h2>
+        <p>Turn your image and metadata into extraordinary NFTs.</p>
 
-      <div className="buttonContainer">
-        <button className="button createButton" onClick={createNft}>
-          Create NFT
-        </button>
-        <button
-          className="button cancelButton"
-          onClick={() => {
-            setImagePreview(null);
-            setSelectedImage(null);
-            setName("");
-            setDescription("");
-          }}
-        >
-          Clear
-        </button>
+        <div className="uploadContainer">
+          {/* 이미지 업로드 영역 */}
+          <div
+            className={`uploadArea ${isDraggingImage ? "dragging" : ""}`}
+            onClick={() => imageFileInputRef.current?.click()}
+            onDragEnter={handleImageDragEnter}
+            onDragOver={handleImageDragOver}
+            onDragLeave={handleImageDragLeave}
+            onDrop={handleImageDrop}
+          >
+            {!imagePreview ? (
+              <p className="uploadText">
+                Drag and drop media
+                <br />
+                <span
+                  className="browseTextContainer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    imageFileInputRef.current.click();
+                  }}
+                >
+                  <span className="browseText">Browse files</span>
+                  <input
+                    ref={imageFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleChangeImgSrc(e.target)}
+                    className="fileInput"
+                  />
+                </span>
+              </p>
+            ) : (
+              <div className="uploadPreview">
+                <img
+                  src={imagePreview}
+                  alt="Uploaded preview"
+                  className="previewImage"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 새로운 메타데이터 입력 필드 */}
+          <div className="metadataContainer">
+            <h4>Metadata</h4>
+            <div className="inputGroup">
+              <label htmlFor="nftName">Name:</label>
+              <input
+                type="text"
+                id="nftName"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter NFT name"
+                className="textInput"
+              />
+            </div>
+            <div className="inputGroup">
+              <label htmlFor="nftDescription">Description:</label>
+              <textarea
+                id="nftDescription"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter NFT description"
+                className="textareaInput"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="buttonContainer">
+          <button className="button createButton" onClick={createNft}>
+            Create NFT
+          </button>
+          <button
+            className="button cancelButton"
+            onClick={() => {
+              setImagePreview(null);
+              setSelectedImage(null);
+              setName("");
+              setDescription("");
+            }}
+          >
+            Clear
+          </button>
+        </div>
       </div>
     </div>
   );
