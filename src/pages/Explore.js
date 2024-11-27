@@ -51,16 +51,24 @@ function Explore(){
           const response = await fetch(`${API_BASE_URL}/nfts`);
           if (!response.ok) throw new Error("Failed to fetch NFTs");
           const data = await response.json();
-          console.log("Fetched NFTs:", data);
-          setAllNFTs(data);
-          setDisplayedNFTs(data);
+          
+          // Sort by date in descending order (latest first)
+          const sortedData = [...data].sort((a, b) => {
+            const dateA = a?.nft?.date || 0;
+            const dateB = b?.nft?.date || 0;
+            return dateB - dateA;
+          });
+          
+          console.log("Fetched NFTs:", sortedData);
+          setAllNFTs(sortedData);
+          setDisplayedNFTs(sortedData);
         } catch (error) {
           console.error("Error fetching NFTs:", error);
         } finally {
           setIsLoading(false);
         }
       };
-  
+    
       fetchNFTs();
     }, []);
   
@@ -103,7 +111,7 @@ function Explore(){
     };
   
     const handlePostClick = (nft) => {
-      navigate(`/post/${nft?.nft?.dna}`);
+      navigate(`/posts/${nft?.nft?.dna}`);
     };
   
     const indexOfLastPost = currentPage * postsPerPage;
