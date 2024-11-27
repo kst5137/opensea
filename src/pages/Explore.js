@@ -1,0 +1,424 @@
+import { React, useState, useEffect } from 'react';
+import "./styles/Explore.css";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = "http://18.182.26.12/api";
+
+
+function Explore(){
+    const Card = ({ nft, onClick }) => {
+    const getAttributes = (attributes) => {
+        if (!attributes) return '';
+        
+        let body = '';
+        let mouth = '';
+        
+        attributes.forEach(attr => {
+        if (attr?.trait_type === 'Body') {
+            body = attr.value;
+        } else if (attr?.trait_type === 'Mouth') {
+            mouth = attr.value;
+        }
+        });
+    
+        return body && mouth ? `Body: ${body}, Mouth: ${mouth}` : '';
+    };
+    
+    return (
+        <div className="card" onClick={onClick}>
+        <img 
+            src={nft?.nft?.image || "/placeholder.jpg"} 
+            alt={nft?.nft?.name || "NFT"} 
+            className="card-image"
+            onError={(e) => {e.target.src = "/placeholder.jpg"}}
+        />
+        <div className="card-content">
+            <h3>{nft?.nft?.name || "Unnamed NFT"}</h3>
+            <p className="price" style={{ color: '#2081e2', fontWeight: 'bold' }}>
+            Price: {Number(nft?.price || 0).toFixed(2)} ETH
+            </p>
+        </div>
+        </div>
+        );
+    };
+
+
+
+    const navigate = useNavigate();
+    const [allNFTs, setAllNFTs] = useState([]);
+    const [displayedNFTs, setDisplayedNFTs] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const [searchType, setSearchType] = useState("all");
+    const [isLoading, setIsLoading] = useState(false);
+    const postsPerPage = 8;
+  
+    useEffect(() => {
+      const fetchNFTs = async () => {
+        setIsLoading(true);
+        try {
+          const response = await fetch(`${API_BASE_URL}/nfts`);
+          if (!response.ok) throw new Error("Failed to fetch NFTs");
+          const data = await response.json();
+          console.log("Fetched NFTs:", data);
+          setAllNFTs(data);
+          setDisplayedNFTs(data);
+        } catch (error) {
+          console.error("Error fetching NFTs:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchNFTs();
+    }, []);
+  
+    const handleSearch = () => {
+      if (!search.trim()) {
+        setDisplayedNFTs(allNFTs);
+        return;
+      }
+  
+      const searchTerm = search.trim().toLowerCase();
+      let filtered = allNFTs;
+  
+      switch (searchType) {
+        case "title":
+          filtered = allNFTs.filter(nft => 
+            nft?.nft?.name?.toLowerCase().includes(searchTerm)
+          );
+          break;
+        case "attributes":
+          filtered = allNFTs.filter(nft => 
+            nft?.nft?.attributes?.some(attr => 
+              attr?.value?.toLowerCase().includes(searchTerm)
+            )
+          );
+          break;
+        default:
+          filtered = allNFTs.filter(nft => 
+            nft?.nft?.name?.toLowerCase().includes(searchTerm) ||
+            nft?.nft?.attributes?.some(attr => 
+              attr?.value?.toLowerCase().includes(searchTerm)
+            )
+          );
+      }
+  
+      setDisplayedNFTs(filtered);
+      setCurrentPage(1);
+    };
+  
+    const handleClearSearch = () => {
+      setSearch("");
+      setDisplayedNFTs(allNFTs);
+      setCurrentPage(1);
+    };
+  
+    const handlePostClick = (nft) => {
+      navigate(`/post/${nft?.nft?.dna}`);
+    };
+  
+    const indexOfLastPost = currentPage * postsPerPage;
+    const indexOfFirstPost = indexOfLastPost - postsPerPage;
+    const currentPosts = displayedNFTs.slice(indexOfFirstPost, indexOfLastPost);
+    const totalPages = Math.ceil(displayedNFTs.length / postsPerPage);
+  
+    return (
+      <>
+        <div className="explore">
+          <main>
+            <h1>Explore</h1>
+            <div className="search-bar">
+              <select 
+                value={searchType} 
+                onChange={(e) => setSearchType(e.target.value)}
+                className="search-type"
+              >
+                <option value="all">All</option>
+                <option value="title">Title</option>
+                <option value="attributes">Attributes</option>
+              </select>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search by ${searchType}`}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <button 
+                onClick={handleSearch}
+                className="search-button"
+              >
+                Search
+              </button>
+              {search && (
+                <button 
+                  onClick={handleClearSearch}
+                  className="clear-button"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+  
+            {!isLoading && search && (
+              <p>Found {displayedNFTs.length} results</p>
+            )}
+  
+            <div className="grid">
+              {isLoading ? (
+                <p>Loading...</p>
+              ) : currentPosts.length > 0 ? (
+                currentPosts.map((nft) => (
+                  <Card 
+                    key={nft?.nft?.dna || Math.random().toString()}
+                    nft={nft}
+                    onClick={() => handlePostClick(nft)}
+                  />
+                ))
+              ) : (
+                <p>No NFTs found</p>
+              )}
+            </div>
+  
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                >
+                  &lt;
+                </button>
+                {[...Array(totalPages)].map((_, idx) => (
+                  <button
+                    key={idx + 1}
+                    onClick={() => setCurrentPage(idx + 1)}
+                    className={currentPage === idx + 1 ? 'active' : ''}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+                <button 
+                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  &gt;
+                </button>
+              </div>
+            )}
+          </main>
+        </div>
+      </>
+    );
+}  
+export default Explore;
+
+
+
+// const Card = ({ nft, onClick }) => {
+//     const getAttributes = (attributes) => {
+//       if (!attributes) return '';
+      
+//       let body = '';
+//       let mouth = '';
+      
+//       attributes.forEach(attr => {
+//         if (attr?.trait_type === 'Body') {
+//           body = attr.value;
+//         } else if (attr?.trait_type === 'Mouth') {
+//           mouth = attr.value;
+//         }
+//       });
+  
+//       return body && mouth ? `Body: ${body}, Mouth: ${mouth}` : '';
+//     };
+  
+//     return (
+//       <div className="card" onClick={onClick}>
+//         <img 
+//           src={nft?.nft?.image || "/placeholder.jpg"} 
+//           alt={nft?.nft?.name || "NFT"} 
+//           className="card-image"
+//           onError={(e) => {e.target.src = "/placeholder.jpg"}}
+//         />
+//         <div className="card-content">
+//           <h3>{nft?.nft?.name || "Unnamed NFT"}</h3>
+//           <p className="price" style={{ color: '#2081e2', fontWeight: 'bold' }}>
+//             Price: {Number(nft?.price || 0).toFixed(2)} ETH
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   };
+  
+//   export const Explore = () => {
+//     const navigate = useNavigate();
+//     const [allNFTs, setAllNFTs] = useState([]);
+//     const [displayedNFTs, setDisplayedNFTs] = useState([]);
+//     const [currentPage, setCurrentPage] = useState(1);
+//     const [search, setSearch] = useState("");
+//     const [searchType, setSearchType] = useState("all");
+//     const [isLoading, setIsLoading] = useState(false);
+//     const postsPerPage = 8;
+  
+//     useEffect(() => {
+//       const fetchNFTs = async () => {
+//         setIsLoading(true);
+//         try {
+//           const response = await fetch(`${API_BASE_URL}/nfts`);
+//           if (!response.ok) throw new Error("Failed to fetch NFTs");
+//           const data = await response.json();
+//           console.log("Fetched NFTs:", data);
+//           setAllNFTs(data);
+//           setDisplayedNFTs(data);
+//         } catch (error) {
+//           console.error("Error fetching NFTs:", error);
+//         } finally {
+//           setIsLoading(false);
+//         }
+//       };
+  
+//       fetchNFTs();
+//     }, []);
+  
+//     const handleSearch = () => {
+//       if (!search.trim()) {
+//         setDisplayedNFTs(allNFTs);
+//         return;
+//       }
+  
+//       const searchTerm = search.trim().toLowerCase();
+//       let filtered = allNFTs;
+  
+//       switch (searchType) {
+//         case "title":
+//           filtered = allNFTs.filter(nft => 
+//             nft?.nft?.name?.toLowerCase().includes(searchTerm)
+//           );
+//           break;
+//         case "attributes":
+//           filtered = allNFTs.filter(nft => 
+//             nft?.nft?.attributes?.some(attr => 
+//               attr?.value?.toLowerCase().includes(searchTerm)
+//             )
+//           );
+//           break;
+//         default:
+//           filtered = allNFTs.filter(nft => 
+//             nft?.nft?.name?.toLowerCase().includes(searchTerm) ||
+//             nft?.nft?.attributes?.some(attr => 
+//               attr?.value?.toLowerCase().includes(searchTerm)
+//             )
+//           );
+//       }
+  
+//       setDisplayedNFTs(filtered);
+//       setCurrentPage(1);
+//     };
+  
+//     const handleClearSearch = () => {
+//       setSearch("");
+//       setDisplayedNFTs(allNFTs);
+//       setCurrentPage(1);
+//     };
+  
+//     const handlePostClick = (nft) => {
+//       navigate(`/post/${nft?.nft?.dna}`);
+//     };
+  
+//     const indexOfLastPost = currentPage * postsPerPage;
+//     const indexOfFirstPost = indexOfLastPost - postsPerPage;
+//     const currentPosts = displayedNFTs.slice(indexOfFirstPost, indexOfLastPost);
+//     const totalPages = Math.ceil(displayedNFTs.length / postsPerPage);
+  
+//     return (
+//       <>
+//         <header>
+//           <NavBar />
+//         </header>
+//         <div className="explore">
+//           <main>
+//             <h1>Explore</h1>
+//             <div className="search-bar">
+//               <select 
+//                 value={searchType} 
+//                 onChange={(e) => setSearchType(e.target.value)}
+//                 className="search-type"
+//               >
+//                 <option value="all">All</option>
+//                 <option value="title">Title</option>
+//                 <option value="attributes">Attributes</option>
+//               </select>
+//               <input
+//                 type="text"
+//                 value={search}
+//                 onChange={(e) => setSearch(e.target.value)}
+//                 placeholder={`Search by ${searchType}`}
+//                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+//               />
+//               <button 
+//                 onClick={handleSearch}
+//                 className="search-button"
+//               >
+//                 Search
+//               </button>
+//               {search && (
+//                 <button 
+//                   onClick={handleClearSearch}
+//                   className="clear-button"
+//                 >
+//                   Clear
+//                 </button>
+//               )}
+//             </div>
+  
+//             {!isLoading && search && (
+//               <p>Found {displayedNFTs.length} results</p>
+//             )}
+  
+//             <div className="grid">
+//               {isLoading ? (
+//                 <p>Loading...</p>
+//               ) : currentPosts.length > 0 ? (
+//                 currentPosts.map((nft) => (
+//                   <Card 
+//                     key={nft?.nft?.dna || Math.random().toString()}
+//                     nft={nft}
+//                     onClick={() => handlePostClick(nft)}
+//                   />
+//                 ))
+//               ) : (
+//                 <p>No NFTs found</p>
+//               )}
+//             </div>
+  
+//             {totalPages > 1 && (
+//               <div className="pagination">
+//                 <button 
+//                   onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+//                   disabled={currentPage === 1}
+//                 >
+//                   &lt;
+//                 </button>
+//                 {[...Array(totalPages)].map((_, idx) => (
+//                   <button
+//                     key={idx + 1}
+//                     onClick={() => setCurrentPage(idx + 1)}
+//                     className={currentPage === idx + 1 ? 'active' : ''}
+//                   >
+//                     {idx + 1}
+//                   </button>
+//                 ))}
+//                 <button 
+//                   onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+//                   disabled={currentPage === totalPages}
+//                 >
+//                   &gt;
+//                 </button>
+//               </div>
+//             )}
+//           </main>
+//         </div>
+//       </>
+//     );
+//   };

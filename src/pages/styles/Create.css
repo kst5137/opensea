@@ -1,0 +1,244 @@
+/* src/pages/styles/Create.css */
+
+.createContainer {
+    padding: 20px;
+    max-width: 1000px;
+    margin: auto;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    text-align: center;
+    color: #333333;
+  }
+  
+  p {
+    text-align: center;
+    color: #666666;
+  }
+  
+  .uploadContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 30px;
+  }
+  
+  /* Image Upload Area */
+  .uploadArea {
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+    max-width: 450px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition:
+      border-color 0.3s,
+      background-color 0.3s,
+      box-shadow 0.3s;
+  }
+  
+  .uploadArea.dragging {
+    border-color: #0066ff;
+    background-color: rgba(0, 102, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
+  }
+  
+  .uploadArea:hover {
+    border-color: #0066ff;
+    box-shadow: 0 0 10px rgba(0, 102, 255, 0.2);
+  }
+  
+  .uploadPreview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  .previewImage {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+    object-fit: contain;
+  }
+  
+  /* Metadata Input Fields */
+  .metadataContainer {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f7f7f7;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .metadataContainer h4 {
+    margin-bottom: 15px;
+    color: #333333;
+  }
+  
+  .inputGroup {
+    margin-bottom: 20px;
+  }
+  
+  .inputGroup label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555555;
+  }
+  
+  .textInput,
+  .textareaInput {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition:
+      border-color 0.3s,
+      box-shadow 0.3s;
+    box-sizing: border-box;
+    background-color: #ffffff;
+  }
+  
+  .textInput:focus,
+  .textareaInput:focus {
+    border-color: #0066ff;
+    box-shadow: 0 0 8px rgba(0, 102, 255, 0.2);
+    outline: none;
+  }
+  
+  .textareaInput {
+    resize: vertical;
+    height: 100px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Browse Text */
+  .browseText {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .browseTextContainer {
+    display: inline-block;
+    margin-top: 10px;
+  }
+  
+  /* File Input */
+  .fileInput {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  /* Button Styles */
+  .buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+    gap: 15px;
+  }
+  
+  .button {
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    transition:
+      background-color 0.3s,
+      transform 0.2s;
+  }
+  
+  .createButton {
+    background-color: #4caf50;
+  }
+  
+  .createButton:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+  }
+  
+  .cancelButton {
+    background-color: #f44336;
+  }
+  
+  .cancelButton:hover {
+    background-color: #e53935;
+    transform: translateY(-2px);
+  }
+  
+  /* Modal Overlay */
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal Content */
+  .modalContent {
+    background: #ffffff;
+    padding: 30px 50px;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  
+  .modalText {
+    font-size: 20px;
+    color: #333333;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .uploadContainer {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .uploadArea,
+    .metadataContainer {
+      width: 100%;
+      max-width: none;
+    }
+  
+    .buttonContainer {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+  

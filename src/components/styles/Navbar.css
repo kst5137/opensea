@@ -1,0 +1,46 @@
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px 20px;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .logo {
+    font-family: "Lobster", cursive;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .nav-item {
+    font-size: 16px;
+    color: #333;
+    text-decoration: none; /* 링크 스타일 제거 */
+    cursor: pointer;
+  }
+  
+  .nav-item:hover {
+    color: #007bff;
+  }
+  
+  .login-button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .login-button:hover {
+    background-color: #0056b3;
+  }
+  
