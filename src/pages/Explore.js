@@ -6,22 +6,13 @@ const API_BASE_URL = "http://18.182.26.12/api";
 
 
 function Explore(){
-    const Card = ({ nft, onClick }) => {
-    const getAttributes = (attributes) => {
-        if (!attributes) return '';
-        
-        let body = '';
-        let mouth = '';
-        
-        attributes.forEach(attr => {
-        if (attr?.trait_type === 'Body') {
-            body = attr.value;
-        } else if (attr?.trait_type === 'Mouth') {
-            mouth = attr.value;
-        }
-        });
-    
-        return body && mouth ? `Body: ${body}, Mouth: ${mouth}` : '';
+  const Card = ({ nft, onClick }) => {
+    const getNFTName = () => {
+      const name = nft?.nft?.name;
+      if (!name || name === "Unnamed NFT" || name.trim() === "") {
+        return `NFT #${nft?.nft?.edition || "Unknown"}`;
+      }
+      return name;
     };
     
     return (
@@ -88,21 +79,18 @@ function Explore(){
             nft?.nft?.name?.toLowerCase().includes(searchTerm)
           );
           break;
-        case "attributes":
+        case "compiler":
           filtered = allNFTs.filter(nft => 
-            nft?.nft?.attributes?.some(attr => 
-              attr?.value?.toLowerCase().includes(searchTerm)
-            )
+            nft?.nft?.compiler?.toLowerCase().includes(searchTerm)
           );
           break;
         default:
           filtered = allNFTs.filter(nft => 
             nft?.nft?.name?.toLowerCase().includes(searchTerm) ||
-            nft?.nft?.attributes?.some(attr => 
-              attr?.value?.toLowerCase().includes(searchTerm)
-            )
+            nft?.nft?.compiler?.toLowerCase().includes(searchTerm)
           );
       }
+  
   
       setDisplayedNFTs(filtered);
       setCurrentPage(1);
@@ -136,7 +124,7 @@ function Explore(){
               >
                 <option value="all">All</option>
                 <option value="title">Title</option>
-                <option value="attributes">Attributes</option>
+                <option value="compiler">Creator</option>
               </select>
               <input
                 type="text"
@@ -165,52 +153,69 @@ function Explore(){
               <p>Found {displayedNFTs.length} results</p>
             )}
   
-            <div className="grid">
-              {isLoading ? (
-                <p>Loading...</p>
-              ) : currentPosts.length > 0 ? (
-                currentPosts.map((nft) => (
-                  <Card 
-                    key={nft?.nft?.dna || Math.random().toString()}
-                    nft={nft}
-                    onClick={() => handlePostClick(nft)}
-                  />
-                ))
-              ) : (
-                <p>No NFTs found</p>
-              )}
-            </div>
-  
-            {totalPages > 1 && (
-              <div className="pagination">
-                <button 
-                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
-                  disabled={currentPage === 1}
-                >
-                  &lt;
-                </button>
-                {[...Array(totalPages)].map((_, idx) => (
-                  <button
-                    key={idx + 1}
-                    onClick={() => setCurrentPage(idx + 1)}
-                    className={currentPage === idx + 1 ? 'active' : ''}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
-                <button 
-                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  &gt;
-                </button>
-              </div>
+          <div className="grid">
+            {isLoading ? (
+              <p>Loading...</p>
+            ) : currentPosts.length > 0 ? (
+              currentPosts.map((nft) => (
+                <Card 
+                  key={nft?.nft?.dna || Math.random().toString()}
+                  nft={nft}
+                  onClick={() => handlePostClick(nft)}
+                />
+              ))
+            ) : (
+              <p>No NFTs found</p>
             )}
-          </main>
-        </div>
-      </>
-    );
-}  
+          </div>
+  
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="page-button"
+              >
+                &lt;
+              </button>
+              {[...Array(totalPages)].map((_, idx) => {
+                if (
+                  idx + 1 === 1 ||
+                  idx + 1 === totalPages ||
+                  Math.abs(currentPage - (idx + 1)) <= 2
+                ) {
+                  return (
+                    <button
+                      key={idx + 1}
+                      onClick={() => setCurrentPage(idx + 1)}
+                      className={currentPage === idx + 1 ? 'page-button active' : 'page-button'}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                } else if (
+                  idx + 1 === currentPage - 3 || 
+                  idx + 1 === currentPage + 3
+                ) {
+                  
+                  return <span key={idx + 1} className="pagination-ellipsis">...</span>;
+                }
+                return null;
+              })}
+              <button 
+                onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="page-button"
+              >
+                &gt;
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
+    </>
+  );
+}
 export default Explore;
 
 
