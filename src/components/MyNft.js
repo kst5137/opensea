@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./styles/MyNft.css";
 
 export default function MyNftlist({userEmail}) {
     const [eventsCreated, setCreated] = useState([]);
     const [eventsOwned, setOwned] = useState([]);
-    
+    const navigate = useNavigate();
+    const handleNFTClick = (post) => {
+      if (post) {
+        console.log(post);
+        navigate(`/posts/${post.id}`);
+      }
+    };
     useEffect(() => {
         axios
             .get("http://18.182.26.12/api/nfts")
@@ -27,7 +34,7 @@ export default function MyNftlist({userEmail}) {
     {eventsCreated.length !== 0 && (
       <div className="grid grid-cols-3 gap-4">
         {eventsCreated.map((nfts, index) => (
-          <div className="card" key={index}>
+          <div className="card" key={index} onClick={() => handleNFTClick(nfts.post)}>
             <img
               src={nfts.nft.image || "/placeholder.jpg"}
               alt={nfts.nft.name || "NFT"}
