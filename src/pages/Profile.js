@@ -26,13 +26,14 @@ function Profile() {
   };
 
   const [user, setUser] = useState(null); // user 상태 추가
+  // const [profileImg, setProfileImg] = useState(null); // user 상태 추가
   const token = localStorage.getItem('access_token');
   const user_email = JSON.parse(localStorage.getItem('user_email'));
   const navigate = useNavigate(); // navigate 함수 선언
   useEffect(() => {
     // localStorage에서 이미지 경로를 가져옵니다.
     const userImagePath = JSON.parse(localStorage.getItem('profile_img'));
-    
+    console.log("이미지 ㅈ경로",userImagePath);
     // 이미지 경로가 있으면 해당 경로 사용, 없으면 기본 이미지 사용
     if (userImagePath && userImagePath !== "") {
       console.log(userImagePath);
@@ -41,9 +42,10 @@ function Profile() {
       setImage("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png");
     }
   }, []);
-  console.log(Image);
+
+
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('nickname');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -58,10 +60,17 @@ function Profile() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const formdata = new FormData();
     const requestBody = {};
-    if (nickname) requestBody.nickname = nickname;
-    if (password) requestBody.password = password;
-    if (Image) requestBody.profile_img = Image;
+    // FormData에 nickname과 password를 추가합니다.
+    if (nickname) formdata.append("nickname", nickname);
+    if (password) formdata.append("password", password);
+
+    // 이미지 파일이 있으면 profile_img로 추가합니다.
+    if (fileInput.current.files[0]) {
+      formdata.append("profile_img", fileInput.current.files[0]);
+    }
+    
 
     if (!token) {
       alert("로그인 토큰이 없습니다. 다시 로그인하세요.");
@@ -70,23 +79,27 @@ function Profile() {
     try {
       const response = await axios.put(
         "http://127.0.0.1:8000/mypage/",
-        requestBody,
+        formdata,
         {
           headers: {
             "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
+
       console.log('requestbody',requestBody);
       console.log("프로필 수정 성공:", response.data);
 
       if (response.data.updated_user) {
         const updatedUser = response.data.updated_user.nickname;
+        const updateProfileImg = response.data.updated_user.profile_img;
         setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem('nickname', JSON.stringify(updatedUser));
+        localStorage.setItem('profile_img', JSON.stringify(updateProfileImg));
+
       }
-      console.log(JSON.parse(localStorage.getItem('user')))
+      // console.log(JSON.parse(localStorage.getItem('user')))
 
       handleCloseModal();
     } catch (error) {
@@ -104,7 +117,7 @@ function Profile() {
     <div className="Profile">
       <div className={token ? "hidden" : ""}>
         <div className="alert alert-danger" role="alert">
-          Please connect to your email first.
+          먼저 로그인을 해주세요.
         </div>
       </div>
 
