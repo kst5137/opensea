@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-const Login = () => {
+import { useLocation } from 'react-router-dom';
+const Login = ({setToken}) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const {state} = useLocation();
+
+    useEffect(()=>{
+      console.log(state)
+    })
     
     const handleLogin = async (event) => {
       event.preventDefault();
@@ -26,12 +31,13 @@ const Login = () => {
   
         // 로그인 성공 시 토큰 저장
         localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('nickname', JSON.stringify(response.data.nickname));
         localStorage.setItem('user_email', JSON.stringify(response.data.user_email));
         localStorage.setItem('profile_img', JSON.stringify(response.data.profile_img));
-        
+        localStorage.setItem('role', response.data.role);
         console.log('로그인 성공', response.data);
         // 로그인 후 홈으로 리디렉션
+        setToken(response.data.access_token)
         navigate('/');
         
       } catch (error) {

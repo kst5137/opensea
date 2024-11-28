@@ -1,99 +1,40 @@
-.nft-list {
-    margin: 20px;
-}
-
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; 
-    gap: 5px; 
-}
-
-.col {
-    flex: 1 1 calc(12.5% - 20px); 
-    margin: 2px;
-    max-width: calc(12.5% - 20px);
-    box-sizing: border-box;
-}
-
-.card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
+/* .nft-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+  } */
+  .nft-list {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 2rem; /* 섹션 간격 */
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
     background-color: #fff;
-}
-
-.card-img-top {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+  
+  .card-image {
     width: 100%;
-    height: 100%; 
-    aspect-ratio: 1;
-    object-fit: cover;
-}
-
-.card-body {
-    padding: 5px;
-    text-align: center;
-}
-
-.card-title {
-    font-size: 1rem;
+    height: 100px;
+    object-fit: contain;
+  }
+  
+  .card-content {
+    padding: 1.25rem;
+  }
+  
+  .card-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .price {
+    color: #2081e2;
     font-weight: bold;
-    color: #333;
-}
-
-
-@media (max-width: 1200px) {
-    .col {
-        flex: 1 1 calc(14.28% - 20px); 
-        max-width: calc(14.28% - 20px);
-    }
-}
-
-
-@media (max-width: 992px) {
-    .col {
-        flex: 1 1 calc(16.66% - 20px); 
-        max-width: calc(16.66% - 20px);
-    }
-}
-
-@media (max-width: 768px) {
-    .col {
-        flex: 1 1 calc(20% - 20px); 
-        max-width: calc(20% - 20px);
-    }
-}
-
-@media (max-width: 576px) {
-    .col {
-        flex: 1 1 calc(25% - 20px); 
-        max-width: calc(25% - 20px);
-    }
-}
-
-
-@media (max-width: 400px) {
-    .col {
-        flex: 1 1 calc(50% - 20px); 
-        max-width: calc(50% - 20px);
-    }
-
-    .card-img-top {
-        height: 100px; 
-    }
-}
-
-
-@media (max-width: 300px) {
-    .col {
-        flex: 1 1 50px; 
-        max-width: 50px;
-    }
-
-    .card-img-top {
-        height: 50px; 
-    }
-}
+  }

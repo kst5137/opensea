@@ -1,33 +1,27 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Route, useNavigate } from "react-router-dom";
 import './styles/Navbar.css';
 import { useState, useEffect, React } from "react";
 
-function Navbar({ }) {
+function Navbar({ token, setToken}) {
     const navigate = useNavigate();
-    const [token, setToken] = useState(null);
-    useEffect(() => {
-        const storedToken = localStorage.getItem('access_token');
-        if (storedToken) {
-          setToken(storedToken);
-        }
-      }, []);
+
 
     const handleLogout = () => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
-      localStorage.removeItem('user_eamil');
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('profile_img');
+      localStorage.removeItem('role');
+      localStorage.removeItem('nickname');
       setToken(null);
       navigate('/'); 
     };
-    useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        setToken(token);
-      }, []);
-
+  
     return (
         <header className="nav">
         <div className="logo">openSea</div>
         <nav className="nav-list">
+          
           <Link to="/" className="nav-item">HOME</Link>
           <Link to="/explore" className="nav-item">Explore</Link>
           <Link to="/create" className="nav-item">Create</Link>
@@ -39,7 +33,7 @@ function Navbar({ }) {
                 onClick={handleLogout}
                 className="btn btn-danger"
               > 로그아웃 </button>)
-            :  (<Link to="/login" className="login-button">LOGIN</Link>)
+            :  (<Link to="/login" className="login-button" >LOGIN</Link>)
           }
         </nav>
       </header>
