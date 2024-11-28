@@ -32,33 +32,29 @@ const PaymentResultModal = ({ isOpen, onClose, isSuccess }) => {
   );
 };
 
-const MakeOfferModal = ({ onClose, onSubmit }) => {
-  const [offerData, setOfferData] = useState({
-    username: '',
-    price: ''
-  });
+const MakeOfferModal = ({ onClose, onSubmit, userEmail }) => {
+  const [price, setPrice] = useState('');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setOfferData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setPrice(e.target.value);
   };
 
   const handleSubmit = () => {
-    if (!offerData.username.trim() || !offerData.price.trim()) {
-      alert('모든 필드를 입력해주세요.');
+    if (!price.trim()) {
+      alert('가격을 입력해주세요.');
       return;
     }
 
-    if (isNaN(offerData.price) || offerData.price <= 0) {
+    if (isNaN(price) || price <= 0) {
       alert('유효한 가격을 입력해주세요.');
       return;
     }
 
     if (window.confirm('제안하시겠습니까?')) {
-      onSubmit(offerData);
+      onSubmit({
+        username: userEmail,
+        price: price
+      });
     }
   };
 
@@ -67,21 +63,15 @@ const MakeOfferModal = ({ onClose, onSubmit }) => {
       <div className="modal-content">
         <h2>제안하기</h2>
         <div className="input-group">
-          <label>사용자 이름</label>
-          <input
-            type="text"
-            name="username"
-            value={offerData.username}
-            onChange={handleChange}
-            placeholder="사용자 이름을 입력하세요"
-          />
+          <label>사용자 : </label>
+          <div className="user-email">{userEmail}</div>
         </div>
         <div className="input-group">
           <label>제안 가격 (ETH)</label>
           <input
             type="number"
             name="price"
-            value={offerData.price}
+            value={price}
             onChange={handleChange}
             placeholder="가격을 입력하세요"
             step="0.01"
@@ -104,7 +94,7 @@ const AcceptOfferModal = ({ onClose, onConfirm, offerData }) => {
         <h2>제안 수락</h2>
         <p>다음 제안을 수락하시겠습니까?</p>
         <div className="offer-details">
-          <p>제안 가격: {offerData.expected_price} ETH</p>
+          <p>제안 가격: {offerData.offer_price} ETH</p>
           <p>제안자: {offerData.user_id}</p>
         </div>
         <div className="modal-buttons">
@@ -134,8 +124,13 @@ const ItemDetail = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [ethPrice, setEthPrice] = useState(null);
+  const [isAuthor, setIsAuthor] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
+    const email = localStorage.getItem('user_email');
+    setUserEmail(email || '');
+
     const handleContextMenu = (e) => {
       e.preventDefault();
     };
@@ -151,6 +146,13 @@ const ItemDetail = () => {
 
   axios.defaults.baseURL = API_BASE_URL;
   axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+  useEffect(() => {
+    if (itemData) {
+      const currentUserEmail = localStorage.getItem('user_email');
+      setIsAuthor(currentUserEmail === itemData.post.user_id);
+    }
+  }, [itemData]);
 
   const fetchEthPrice = async () => {
     try {
@@ -185,7 +187,7 @@ const ItemDetail = () => {
       return;
     }
 
-    const totalAmount = Math.floor(ethPrice * itemData.post.expected_price);
+    const totalAmount = Math.floor(0.000001*ethPrice * itemData.post.expected_price);
 
     const tossPayments = window.TossPayments("test_ck_PBal2vxj81P9lJQZP4wAr5RQgOAN");
     const payment = tossPayments.payment({customerKey: "test_ck_PBal2vxj81P9lJQZP4wAr5RQgOAN"});
@@ -207,12 +209,21 @@ const ItemDetail = () => {
       },
     })
     .then(async () => {
+      console.log("성공");
       try {
-        await axios.post(`/posts/sold/${itemId}`, {
+        await axios.put(`/posts/${itemId}/sold`, {
           sold_price: totalAmount
         });
         setIsPaymentSuccess(true);
         setIsPaymentModalOpen(true);
+        // 결제 성공 후 상품 상태 업데이트
+        setItemData(prevData => ({
+          ...prevData,
+          post: {
+            ...prevData.post,
+            is_sold: 1
+          }
+        }));
       } catch (error) {
         console.error('Error updating post sold status:', error);
         setIsPaymentSuccess(false);
@@ -231,6 +242,11 @@ const ItemDetail = () => {
   };
 
   const handleMakeOffer = () => {
+    if (!userEmail) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     if (itemData.post.offer_accepted) {
       alert('이미 수락된 제안이 있습니다.');
       return;
@@ -240,9 +256,11 @@ const ItemDetail = () => {
 
   const handleSubmitOffer = async (offerData) => {
     try {
-      const response = await axios.post(`/offer/${itemId}`, {
-        username: offerData.username,
-        price: parseFloat(offerData.price)
+      const response = await axios.post(`/posts/${itemId}/offer`, {
+        user_id: offerData.user_id,
+        post_id: parseInt(itemId),
+        offer_price: parseFloat(offerData.price),
+        dna: offerData.dna
       });
       
       const newOffer = response.data;
@@ -289,6 +307,25 @@ const ItemDetail = () => {
     }
   };
 
+  const renderActionButton = (offer) => {
+    if (offer.accepted) {
+      return <span className="accepted-badge">수락됨</span>;
+    }
+    
+    if (!itemData.post.offer_accepted && isAuthor) {
+      return (
+        <button
+          className="accept-btn"
+          onClick={() => handleAcceptOffer(offer)}
+        >
+          수락
+        </button>
+      );
+    }
+    
+    return null;
+  };
+
   if (loading) return <div>로딩 중...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!itemData) return <div>아이템을 찾을 수 없습니다.</div>;
@@ -318,7 +355,9 @@ const ItemDetail = () => {
         <div className="item-info">
           <h1 className="item-title">{itemData.post.item_name}</h1>
           <p className="owner">Owned by {itemData.post.user_id}</p>
-          <h2 className="item-price">- {itemData.post.expected_price} ETH</h2>
+          <h2 className={`item-price ${itemData.post.is_sold ? 'sold-out' : ''}`}>
+            {itemData.post.is_sold ? '판매 완료' : `${itemData.post.expected_price} ETH`}
+          </h2>
           
           <div className="description">
             <h3>Description</h3>
@@ -327,15 +366,16 @@ const ItemDetail = () => {
 
           <div className="action-buttons">
             <button 
-              className="action-btn buy-btn" 
+              className={`action-btn buy-btn ${itemData.post.is_sold ? 'sold-out' : ''}`}
               onClick={handleBuy}
+              disabled={itemData.post.is_sold}
             >
-              구매하기
+              {itemData.post.is_sold ? '판매 완료' : '구매하기'}
             </button>
             <button 
               className="action-btn offer-btn" 
               onClick={handleMakeOffer}
-              disabled={itemData.post.offer_accepted}
+              disabled={itemData.post.is_sold || itemData.post.offer_accepted}
             >
               제안하기
             </button>
@@ -365,16 +405,7 @@ const ItemDetail = () => {
                     <span className="column-user">{offer.user_id}</span>
                     <span className="column-date">{offer.created_date}</span>
                     <span className="column-action">
-                      {offer.accepted ? (
-                        <span className="accepted-badge">수락됨</span>
-                      ) : !itemData.post.offer_accepted ? (
-                        <button
-                          className="accept-btn"
-                          onClick={() => handleAcceptOffer(offer)}
-                        >
-                          수락
-                        </button>
-                      ) : null}
+                      {renderActionButton(offer)}
                     </span>
                   </div>
                 ))
@@ -392,10 +423,11 @@ const ItemDetail = () => {
         <MakeOfferModal
           onClose={() => setShowOfferModal(false)}
           onSubmit={handleSubmitOffer}
+          userEmail={userEmail}
         />
       )}
 
-      {showImageModal && (
+{showImageModal && (
         <div className="image-modal" onClick={() => setShowImageModal(false)}>
           <div className="image-modal-content">
             <img 

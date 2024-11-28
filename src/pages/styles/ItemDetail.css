@@ -81,6 +81,10 @@
   width: 100%;
 }
 
+.item-price.sold-out {
+  color: #ff0000;
+}
+
 .description {
   margin-top: 20px;
   text-align: left;
@@ -121,6 +125,15 @@
 
 .buy-btn:hover {
   background-color: #1869b7;
+}
+
+.buy-btn.sold-out {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.buy-btn.sold-out:hover {
+  background-color: #cccccc;
 }
 
 .offer-btn {
