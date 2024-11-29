@@ -20,7 +20,7 @@ export default function MyNftlist({userEmail}) {
                 const created = res.data.filter((nfts) => nfts.nft.compiler === userEmail);
                 setCreated(created);
 
-                const owned = res.data.filter((nfts) => nfts.owner === "testuser@test.com");
+                const owned = res.data.filter((nfts) => nfts.owner === userEmail);
                 setOwned(owned);
             })
             .catch(err => console.error(err));
