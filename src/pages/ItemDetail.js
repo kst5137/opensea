@@ -503,9 +503,9 @@ const ItemDetail = () => {
   if (!itemData) return <div>아이템을 찾을 수 없습니다.</div>;
 
   return (
-    <div className="container">
+    <div className="detail-container">
       <div className="content">
-        <div className="item-image-container">
+        <div className="item-image-detail-container">
           <div className="item-image sticky">
             <div 
               className="placeholder-image"
@@ -525,7 +525,7 @@ const ItemDetail = () => {
         </div>
 
         <div className="item-info">
-          <div className="title-container">
+          <div className="title-detail-container">
             <div className="title-wrapper">
               <h1 className="item-title">{itemData.post.item_name}</h1>
             </div>

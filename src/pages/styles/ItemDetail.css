@@ -1,5 +1,5 @@
 /* ItemDetail.css */
-.container {
+.detail-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
@@ -13,7 +13,7 @@
   margin: 0 auto;
 }
 
-.item-image-container {
+.item-image-detail-container {
   width: 100%;
   max-width: 500px;
 }
@@ -463,7 +463,7 @@
   }
 }
 
-.title-container {
+.title-detail-container {
   display: flex;
   align-items: center;
   justify-content: flex-start; /* 왼쪽 정렬 */
