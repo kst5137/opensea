@@ -1,80 +1,91 @@
 body {
   margin: 0;
   font-family: "Arial", sans-serif;
-  background-color: #f9f9f9;
+  background-color: #fff;
 }
 
 .home {
   text-align: center;
 }
 
-.main-content {
-  padding: 20px;
+.page-main-content {
+  padding: 40px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.main-title {
-  font-size: 36px;
+.page-title {
+  font-size: 32px;
   color: #333;
-  margin-bottom: 20px;
+  margin: 40px 0;
+  text-align: center;
 }
 
-.section-title {
+.ranking-title {
   font-size: 24px;
-  color: #0157b3;
-  margin-bottom: 20px;
+  color: #0066FF;
+  margin: 40px 0 30px 0;
   text-align: left;
-  margin-left: 40px;
 }
 
 .slider-container {
   position: relative;
   width: 100%;
-  max-width: 1920px;
-  margin: 10px auto 50px auto;
+  margin: 0 auto 60px auto;
   display: flex;
   align-items: center;
-  overflow: hidden;
-  padding: 0 40px;
+  padding: 0 60px;
 }
 
 .slider {
   display: flex;
-  gap: 15px;
+  gap: 24px;
   overflow: hidden;
   width: 100%;
 }
 
 .slider > * {
-  flex: 0 0 calc(20% - 20px);
+  flex: 0 0 calc(20% - 20px); 
   max-width: calc(20% - 20px);
-  height: 350px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-  gap: 50px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
 }
 
 .card {
   background-color: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
   overflow: hidden;
   text-align: center;
-  padding: 16px;
+  padding: 0;
   transition: transform 0.2s, box-shadow 0.2s;
-  height: 350px;
+  height: 450px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   cursor: pointer;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 350px;
+  overflow: hidden;
+  background-color: #f8f8f8;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .no-image-container {
@@ -83,108 +94,90 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0;
-  border-radius: 8px;
+  background-color: #f8f8f8;
 }
 
 .no-image-text {
   color: #666;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.thumbnail {
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-}
-
-.thumbnail img, .thumbnail .no-image-container {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  font-size: 16px;
 }
 
 .details {
-  padding: 16px 0;
+  padding: 20px;
+  background-color: #fff;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .details h3 {
   font-size: 20px;
   color: #333;
-  margin-bottom: 5px;
+  margin: 0 0 10px 0;
 }
 
-.details p {
-  font-size: 16px;
-  color: #555;
-}
-
-.details strong {
-  color: #007bff;
+.price, .likes {
+  color: #0066FF !important;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ccc;
+  background: #fff;
+  border: 1px solid #ddd;
   border-radius: 50%;
-  color: #333;
-  font-size: 20px;
-  cursor: pointer;
-  z-index: 1000;
-  width: 35px;
-  height: 35px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 2;
+  font-size: 18px;
+  color: #666;
 }
 
 .arrow:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #000;
+  background: #f8f8f8;
 }
 
 .arrow:disabled {
-  background: rgba(0, 0, 0, 0.05);
-  color: #999;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .left-arrow {
-  left: -0.4px;
+  left: 0;
 }
 
 .right-arrow {
-  right: 38px;
+  right: 0;
+}
+
+
+
+@media (max-width: 1200px) {
+  .slider > * {
+    flex: 0 0 calc(33.333% - 16px);
+    max-width: calc(33.333% - 16px);
+  }
 }
 
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-
   .slider > * {
-    flex: 0 0 calc(48% - 20px);
-    max-width: calc(48% - 20px);
+    flex: 0 0 calc(50% - 16px);
+    max-width: calc(50% - 16px);
   }
+}
 
-  .card {
-    height: 300px;
-  }
-
-  .thumbnail img {
-    height: 150px;
-  }
-
-  .main-title {
-    font-size: 28px;
-  }
-
-  .section-title {
-    font-size: 20px;
+@media (max-width: 480px) {
+  .slider > * {
+    flex: 0 0 calc(100% - 16px);
+    max-width: calc(100% - 16px);
   }
 }

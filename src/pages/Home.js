@@ -5,8 +5,8 @@ import "./styles/Home.css";
 const API_BASE_URL = "http://127.0.0.1:8000/posts";
 
 const Home = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentLikeIndex, setCurrentLikeIndex] = useState(0);
+  const [priceIndex, setPriceIndex] = useState(0);
+  const [likeIndex, setLikeIndex] = useState(0);
   const [rankingItems, setRankingItems] = useState([]);
   const [likeRankingItems, setLikeRankingItems] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
@@ -45,15 +45,27 @@ const Home = () => {
     fetchData();
   }, []);
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prevIndex) => prevIndex - 5);
+  const handlePricePrev = () => {
+    if (priceIndex > 0) {
+      setPriceIndex((prevIndex) => prevIndex - 5);
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex + 5 < rankingItems.length) {
-      setCurrentIndex((prevIndex) => prevIndex + 5);
+  const handlePriceNext = () => {
+    if (priceIndex + 3 < rankingItems.length) {
+      setPriceIndex((prevIndex) => prevIndex + 5);
+    }
+  };
+
+  const handleLikePrev = () => {
+    if (likeIndex > 0) {
+      setLikeIndex((prevIndex) => prevIndex - 5);
+    }
+  };
+
+  const handleLikeNext = () => {
+    if (likeIndex + 3 < likeRankingItems.length) {
+      setLikeIndex((prevIndex) => prevIndex + 5);
     }
   };
 
@@ -82,8 +94,8 @@ const Home = () => {
   if (isLoading) {
     return (
       <>
-        <main className="main-content">
-          <h1 className="main-title">Welcome to our openSea</h1>
+        <main className="page-main-content">
+          <h1 className="page-title">Welcome to our openSea</h1>
           <p>Loading...</p>
         </main>
       </>
@@ -92,22 +104,22 @@ const Home = () => {
 
   return (
     <div className="home">
-      <main className="main-content">
-        <h1 className="main-title">Welcome to our openSea</h1>
+      <main className="page-main-content">
+        <h1 className="page-title">Welcome to our openSea</h1>
         
         {/* Price Ranking Section */}
         <section className="ranking-section">
-          <h2 className="section-title">Price Ranking</h2>
+          <h2 className="ranking-title">Price Ranking</h2>
           <div className="slider-container">
             <button
               className="arrow left-arrow"
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
+              onClick={handlePricePrev}
+              disabled={priceIndex === 0}
             >
               ◀
             </button>
             <div className="slider">
-              {rankingItems.slice(currentIndex, currentIndex + 5).map((nft, idx) => (
+              {rankingItems.slice(priceIndex, priceIndex + 5).map((nft, idx) => (
                 <div
                   key={`ranking-${idx}-${nft?.id || Math.random()}`}
                   className="card"
@@ -130,8 +142,8 @@ const Home = () => {
             </div>
             <button
               className="arrow right-arrow"
-              onClick={handleNext}
-              disabled={currentIndex + 5 >= rankingItems.length}
+              onClick={handlePriceNext}
+              disabled={priceIndex + 5 >= rankingItems.length}
             >
               ▶
             </button>
@@ -140,17 +152,17 @@ const Home = () => {
 
         {/* Like Ranking Section */}
         <section className="ranking-section">
-          <h2 className="section-title">Likes Ranking</h2>
+          <h2 className="ranking-title">Likes Ranking</h2>
           <div className="slider-container">
             <button
               className="arrow left-arrow"
-              onClick={handlePrev}
-              disabled={currentLikeIndex === 0}
+              onClick={handleLikePrev}
+              disabled={likeIndex === 0}
             >
               ◀
             </button>
             <div className="slider">
-              {likeRankingItems.slice(currentLikeIndex, currentLikeIndex + 5).map((nft, idx) => (
+              {likeRankingItems.slice(likeIndex, likeIndex + 5).map((nft, idx) => (
                 <div
                   key={`like-ranking-${idx}-${nft?.id || Math.random()}`}
                   className="card"
@@ -173,8 +185,8 @@ const Home = () => {
             </div>
             <button
               className="arrow right-arrow"
-              onClick={handleNext}
-              disabled={currentLikeIndex + 5 >= likeRankingItems.length}
+              onClick={handleLikeNext}
+              disabled={likeIndex + 5 >= likeRankingItems.length}
             >
               ▶
             </button>
@@ -183,12 +195,13 @@ const Home = () => {
 
         {/* Recent Posts Section */}
         <section className="post-section">
-          <h2 className="section-title">Recent Posts</h2>
+          <h2 className="ranking-title">Recent Posts</h2>
           <div className="grid">
             {recentPosts.map((nft, idx) => (
               <div 
                 key={`post-${idx}-${nft?.id || Math.random()}`} 
                 className="card"
+                onClick={() => handleNFTClick(nft)}
               >
                 <div className="thumbnail">
                   <ImageOrNoImage
