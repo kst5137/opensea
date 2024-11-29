@@ -1,4 +1,7 @@
 /* ItemDetail.css */
+button {
+  margin: 5px !important;
+}
 .detail-container {
   max-width: 1200px;
   margin: 0 auto;
