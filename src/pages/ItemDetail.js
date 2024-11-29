@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import './styles/ItemDetail.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/';
+axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 const PaymentResultModal = ({ isOpen, onClose, isSuccess }) => {
   if (!isOpen) return null;
 
@@ -95,7 +99,7 @@ const AcceptOfferModal = ({ onClose, onConfirm, offerData }) => {
         <p>다음 제안을 수락하시겠습니까?</p>
         <div className="offer-details">
           <p>제안 가격: {offerData.offer_price} ETH</p>
-          <p>제안자: {offerData.user_id}</p>
+          <p>제안자: {offerData.email}</p>
         </div>
         <div className="modal-buttons">
           <button className="submit-btn" onClick={onConfirm}>
@@ -109,7 +113,6 @@ const AcceptOfferModal = ({ onClose, onConfirm, offerData }) => {
     </div>
   );
 };
-
 const ItemDetail = () => {
   const navigate = useNavigate();
   const { itemId } = useParams();
@@ -126,10 +129,13 @@ const ItemDetail = () => {
   const [ethPrice, setEthPrice] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [isLiked, setIsLiked] = useState(false);
+  const [acceptedOffer, setAcceptedOffer] = useState(null);
+  const [hasAcceptedOffer, setHasAcceptedOffer] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem('user_email');
-    setUserEmail(email || '');
+    setUserEmail(email ? email.replace(/"/g, '') : '');
 
     const handleContextMenu = (e) => {
       e.preventDefault();
@@ -142,17 +148,43 @@ const ItemDetail = () => {
     };
   }, []);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/';
-
-  axios.defaults.baseURL = API_BASE_URL;
-  axios.defaults.headers.common['Content-Type'] = 'application/json';
+  useEffect(() => {
+    if (acceptedOffer && userEmail) {
+      console.log('Accepted offer email:', acceptedOffer.email);
+      console.log('Current user email:', userEmail.replace(/"/g, ''));
+      console.log('Is match:', acceptedOffer.email.trim().toLowerCase() === userEmail.replace(/"/g, '').trim().toLowerCase());
+    }
+  }, [acceptedOffer, userEmail]);
 
   useEffect(() => {
-    if (itemData) {
-      const currentUserEmail = localStorage.getItem('user_email');
-      setIsAuthor(currentUserEmail === itemData.post.user_id);
+    if (itemData && itemData.post) {
+      const currentUserEmail = localStorage.getItem('user_email')
+        ?.replace(/[\"\\]/g, '');
+      const isAuthorMatch = 
+        currentUserEmail && 
+        itemData.post.user_id && 
+        currentUserEmail.trim().toLowerCase() === String(itemData.user_info.email).trim().toLowerCase();
+      
+      setIsAuthor(isAuthorMatch);
+    }
+
+    if (itemData?.offers) {
+      const accepted = itemData.offers.find(offer => offer.is_accepted);
+      setAcceptedOffer(accepted);
+      setHasAcceptedOffer(Boolean(accepted));
     }
   }, [itemData]);
+
+  const checkLikeStatus = async () => {
+    try {
+      const response = await axios.get(`/posts/${itemId}/like/check`, {
+        params: { user_email: userEmail }
+      });
+      setIsLiked(response.data.liked);
+    } catch (err) {
+      console.error('Error checking like status:', err);
+    }
+  };
 
   const fetchEthPrice = async () => {
     try {
@@ -164,9 +196,27 @@ const ItemDetail = () => {
     }
   };
 
+  const fetchOfferList = async () => {
+    try {
+      const response = await axios.get(`/posts/${itemId}/offerlist`);
+      const hasAccepted = response.data.has_accepted_offer;
+      setHasAcceptedOffer(hasAccepted);
+      
+      if (response.data.offers) {
+        const accepted = response.data.offers.find(offer => offer.is_accepted);
+        setAcceptedOffer(accepted);
+      }
+    } catch (err) {
+      console.error('Error fetching offer list:', err);
+    }
+  };
+
   const fetchItemDetail = async () => {
     try {
       const response = await axios.get(`/posts/${itemId}`);
+      if (response.data.offers) {
+        response.data.offers.sort((a, b) => b.id - a.id);
+      }
       setItemData(response.data);
     } catch (err) {
       setError('아이템 정보를 불러오는데 실패했습니다.');
@@ -179,28 +229,72 @@ const ItemDetail = () => {
   useEffect(() => {
     fetchItemDetail();
     fetchEthPrice();
-  }, [itemId]);
+    fetchOfferList();
+    if (userEmail) {
+      checkLikeStatus();
+    }
+  }, [itemId, userEmail]);
+
+  const handleLikeToggle = async () => {
+    if (!userEmail) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      await axios.post(`/posts/${itemId}/like`, {
+        post_id: parseInt(itemId),
+        user_email: userEmail
+      });
+      setIsLiked(!isLiked);
+    } catch (err) {
+      console.error('Error toggling like:', err);
+      alert('좋아요 처리 중 오류가 발생했습니다.');
+    }
+  };
 
   const handleBuy = () => {
-    if (!ethPrice || !itemData?.post?.expected_price) {
+    if (!userEmail) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!ethPrice) {
       alert('가격 정보를 불러오는데 실패했습니다.');
       return;
     }
 
-    const totalAmount = Math.floor(0.000001*ethPrice * itemData.post.expected_price);
+    const isAcceptedOfferUser = acceptedOffer && 
+      acceptedOffer.email.trim().toLowerCase() === userEmail.replace(/"/g, '').trim().toLowerCase();
+    console.log("test");
+    console.log(isAcceptedOfferUser);
+    if (acceptedOffer && !isAcceptedOfferUser) {
+      alert('이 상품은 제안이 수락된 사용자만 구매할 수 있습니다.');
+      return;
+    }
+
+    let finalPrice;
+    if (isAcceptedOfferUser) {
+      finalPrice = acceptedOffer.offer_price;
+    } else {
+      finalPrice = itemData.post.expected_price;
+    }
+
+    const totalAmount = Math.floor(ethPrice * finalPrice);
 
     const tossPayments = window.TossPayments("test_ck_PBal2vxj81P9lJQZP4wAr5RQgOAN");
     const payment = tossPayments.payment({customerKey: "test_ck_PBal2vxj81P9lJQZP4wAr5RQgOAN"});
+    
     payment.requestPayment({
       method: "CARD",
       amount: {
         currency: "KRW",
         value: totalAmount,
       },
-      orderId: "ZeHhA2Xpfgu1ilgSVTPe7",
+      orderId: `order_${itemId}_${Date.now()}`,
       orderName: itemData.post.item_name,
-      customerEmail: "customer123@gmail.com",
-      customerName: "김토스",
+      customerEmail: userEmail,
+      customerName: userEmail.split('@')[0],
       card: {
         useEscrow: false,
         flowMode: "DEFAULT",
@@ -209,19 +303,20 @@ const ItemDetail = () => {
       },
     })
     .then(async () => {
-      console.log("성공");
       try {
         await axios.put(`/posts/${itemId}/sold`, {
-          sold_price: totalAmount
+          sold_price: finalPrice,
+          offer_id: isAcceptedOfferUser ? acceptedOffer.id : null
         });
+        
         setIsPaymentSuccess(true);
         setIsPaymentModalOpen(true);
-        // 결제 성공 후 상품 상태 업데이트
         setItemData(prevData => ({
           ...prevData,
           post: {
             ...prevData.post,
-            is_sold: 1
+            is_sold: 1,
+            sold_price: finalPrice
           }
         }));
       } catch (error) {
@@ -237,6 +332,23 @@ const ItemDetail = () => {
     });
   };
 
+  const handleEdit = () => {
+    navigate(`/posts/${itemId}/edit`);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('정말로 삭제하시겠습니까?')) {
+      try {
+        await axios.delete(`/posts/${itemId}/delete`);
+        alert('성공적으로 삭제되었습니다.');
+        navigate('/explore');
+      } catch (err) {
+        console.error('Error deleting post:', err);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
   const handleGoToList = () => {
     navigate('/explore');
   };
@@ -247,7 +359,7 @@ const ItemDetail = () => {
       return;
     }
 
-    if (itemData.post.offer_accepted) {
+    if (hasAcceptedOffer) {
       alert('이미 수락된 제안이 있습니다.');
       return;
     }
@@ -256,19 +368,14 @@ const ItemDetail = () => {
 
   const handleSubmitOffer = async (offerData) => {
     try {
-      const response = await axios.post(`/posts/${itemId}/offer`, {
-        user_id: offerData.user_id,
+      await axios.post(`/posts/${itemId}/offer`, {
+        user_email: offerData.username,
         post_id: parseInt(itemId),
-        offer_price: parseFloat(offerData.price),
-        dna: offerData.dna
+        offer_price: parseFloat(offerData.price)
       });
-      
-      const newOffer = response.data;
-      setItemData(prevData => ({
-        ...prevData,
-        offers: [...(prevData.offers || []), newOffer]
-      }));
 
+      await fetchOfferList();
+      await fetchItemDetail();
       alert('제안이 성공적으로 등록되었습니다!');
       setShowOfferModal(false);
     } catch (err) {
@@ -284,21 +391,11 @@ const ItemDetail = () => {
 
   const handleConfirmAccept = async () => {
     try {
-      await axios.post(`/accept/${selectedOffer.id}`);
+      await axios.put(`/posts/${itemId}/accept`, {
+        offer_id: selectedOffer.id
+      });
       
-      setItemData(prevData => ({
-        ...prevData,
-        post: {
-          ...prevData.post,
-          offer_accepted: true
-        },
-        offers: prevData.offers.map(offer => 
-          offer.id === selectedOffer.id 
-            ? { ...offer, accepted: true }
-            : offer
-        )
-      }));
-
+      await fetchOfferList();
       setShowAcceptModal(false);
       alert('제안이 성공적으로 수락되었습니다!');
     } catch (err) {
@@ -307,23 +404,98 @@ const ItemDetail = () => {
     }
   };
 
+  const renderActionButtons = () => {
+    if (isAuthor) {
+      return (
+        <div className="action-buttons">
+          <button 
+            className="action-btn edit-btn"
+            onClick={handleEdit}
+            disabled={itemData.post.is_sold}
+            title={itemData.post.is_sold ? "판매 완료된 게시글은 수정할 수 없습니다" : ""}
+          >
+            수정하기
+          </button>
+          <button 
+            className="action-btn delete-btn"
+            onClick={handleDelete}
+            disabled={itemData.post.is_sold}
+            title={itemData.post.is_sold ? "판매 완료된 게시글은 삭제할 수 없습니다" : ""}
+          >
+            삭제하기
+          </button>
+          <button 
+            className="action-btn list-btn" 
+            onClick={handleGoToList}
+          >
+            목록으로
+          </button>
+        </div>
+      );
+    }
+
+    const isAcceptedOfferUser = acceptedOffer && 
+      acceptedOffer.email.trim().toLowerCase() === userEmail.trim().toLowerCase();
+    
+    const buyButtonText = itemData.post.is_sold 
+      ? '판매 완료' 
+      : isAcceptedOfferUser 
+        ? `수락가격 ${acceptedOffer.offer_price} ETH 결제`
+        : '구매하기';
+
+    return (
+      <div className="action-buttons">
+        <button 
+          className={`action-btn buy-btn ${itemData.post.is_sold ? 'sold-out' : ''}`}
+          onClick={handleBuy}
+          disabled={itemData.post.is_sold || !userEmail || (acceptedOffer && !isAcceptedOfferUser)}
+          title={
+            !userEmail 
+              ? "로그인이 필요합니다" 
+              : itemData.post.is_sold 
+                ? "판매 완료" 
+                : acceptedOffer && !isAcceptedOfferUser 
+                  ? "제안이 수락된 사용자만 구매할 수 있습니다"
+                  : ""
+          }
+        >
+          {buyButtonText}
+        </button>
+        <button 
+          className="action-btn offer-btn" 
+          onClick={handleMakeOffer}
+          disabled={itemData.post.is_sold || hasAcceptedOffer || !userEmail}
+          title={!userEmail ? "로그인이 필요합니다" : itemData.post.is_sold ? "판매 완료" : hasAcceptedOffer ? "이미 수락된 제안이 있습니다" : ""}
+        >
+          제안하기
+        </button>
+        <button 
+          className="action-btn list-btn" 
+          onClick={handleGoToList}
+        >
+          목록으로
+        </button>
+      </div>
+    );
+  };
+
   const renderActionButton = (offer) => {
-    if (offer.accepted) {
+    if (offer.is_accepted) {
       return <span className="accepted-badge">수락됨</span>;
     }
     
-    if (!itemData.post.offer_accepted && isAuthor) {
-      return (
-        <button
-          className="accept-btn"
-          onClick={() => handleAcceptOffer(offer)}
-        >
-          수락
-        </button>
-      );
+    if (hasAcceptedOffer || itemData.post.is_sold || !isAuthor) {
+      return null;
     }
     
-    return null;
+    return (
+      <button
+        className="accept-btn"
+        onClick={() => handleAcceptOffer(offer)}
+      >
+        수락
+      </button>
+    );
   };
 
   if (loading) return <div>로딩 중...</div>;
@@ -353,10 +525,22 @@ const ItemDetail = () => {
         </div>
 
         <div className="item-info">
-          <h1 className="item-title">{itemData.post.item_name}</h1>
-          <p className="owner">Owned by {itemData.post.user_id}</p>
+          <div className="title-container">
+            <div className="title-wrapper">
+              <h1 className="item-title">{itemData.post.item_name}</h1>
+            </div>
+            <button 
+              className={`like-button ${isLiked ? 'liked' : ''}`}
+              onClick={handleLikeToggle}
+            >
+              {isLiked ? '❤️' : '🤍'}
+            </button>
+          </div>
+          <p className="owner">
+            Owned by {itemData.user_info.email}
+          </p>
           <h2 className={`item-price ${itemData.post.is_sold ? 'sold-out' : ''}`}>
-            {itemData.post.is_sold ? '판매 완료' : `${itemData.post.expected_price} ETH`}
+          {itemData.post.is_sold ? '판매 완료' : `${itemData.post.expected_price} ETH`}
           </h2>
           
           <div className="description">
@@ -364,45 +548,16 @@ const ItemDetail = () => {
             <p>{itemData.post.description}</p>
           </div>
 
-          <div className="action-buttons">
-            <button 
-              className={`action-btn buy-btn ${itemData.post.is_sold ? 'sold-out' : ''}`}
-              onClick={handleBuy}
-              disabled={itemData.post.is_sold}
-            >
-              {itemData.post.is_sold ? '판매 완료' : '구매하기'}
-            </button>
-            <button 
-              className="action-btn offer-btn" 
-              onClick={handleMakeOffer}
-              disabled={itemData.post.is_sold || itemData.post.offer_accepted}
-            >
-              제안하기
-            </button>
-            <button 
-              className="action-btn list-btn" 
-              onClick={handleGoToList}
-            >
-              목록으로
-            </button>
-          </div>
+          {renderActionButtons()}
 
           <div className="offers">
-            <h3>Offer 내역</h3>
+            <h3>Offered List</h3>
             <div className="offers-list">
-              {itemData.offers && itemData.offers.length > 0 ? (
-                <div className="offers-header">
-                  <span className="column-price">Price</span>
-                  <span className="column-user">User</span>
-                  <span className="column-date">Date</span>
-                  <span className="column-action">Action</span>
-                </div>
-              ) : null}
               {itemData.offers && itemData.offers.length > 0 ? (
                 itemData.offers.map(offer => (
                   <div key={offer.id} className="offer-item">
                     <span className="column-price">{offer.offer_price} ETH</span>
-                    <span className="column-user">{offer.user_id}</span>
+                    <span className="column-user">{offer.email}</span>
                     <span className="column-date">{offer.created_date}</span>
                     <span className="column-action">
                       {renderActionButton(offer)}
@@ -427,7 +582,7 @@ const ItemDetail = () => {
         />
       )}
 
-{showImageModal && (
+      {showImageModal && (
         <div className="image-modal" onClick={() => setShowImageModal(false)}>
           <div className="image-modal-content">
             <img 

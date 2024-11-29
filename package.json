@@ -13,6 +13,7 @@
     "env-cmd": "^10.1.0",
     "font-awesome": "^4.7.0",
     "gh-pages": "^4.0.0",
+    "lucide-react": "^0.462.0",
     "nft.storage": "^7.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
