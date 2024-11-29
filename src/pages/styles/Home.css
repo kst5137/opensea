@@ -19,8 +19,8 @@ body {
 }
 
 .section-title {
-  font-size: 30px;
-  color: #555;
+  font-size: 24px;
+  color: #0157b3;
   margin-bottom: 20px;
   text-align: left;
   margin-left: 40px;
@@ -77,19 +77,31 @@ body {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.thumbnail {
-  flex: 1;
+.no-image-container {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+}
+
+.no-image-text {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 200px;
   overflow: hidden;
 }
 
-.thumbnail img {
-  background-color: #e0e0e0;
-  height: 200px;
+.thumbnail img, .thumbnail .no-image-container {
   width: 100%;
-  border-radius: 8px;
+  height: 100%;
   object-fit: cover;
 }
 
