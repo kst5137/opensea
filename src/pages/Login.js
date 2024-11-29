@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import useLocalStorage from "use-local-storage";
+import axios from "axios";
 import { useNavigate } from "react-router-dom"; // 리다이렉트를 위한 React Router 사용
 import "./styles/Login.css";
 
-function Login() {
-  const [theme, setTheme] = useLocalStorage("theme", "light");
+const Login = ({ setToken, setIsAdmin, setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,55 +11,57 @@ function Login() {
   const [welcomeMessage, setWelcomeMessage] = useState(""); // 환영 메시지 상태
   const navigate = useNavigate(); // React Router의 navigate 함수 사용
 
-  const switchTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     setWelcomeMessage("");
-
+    console.log(email, password);
     try {
-      const response = await fetch("http://localhost:8000/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
+      const response = await axios.post(
+        "http://localhost:8000/user/login",
+        new URLSearchParams({
           username: email,
           password: password,
         }),
-      });
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.detail || "Login failed");
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
+      const data = response.data;
+      console.log(data);
+      // 데이터 처리 및 상태 업데이트
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("nickname", JSON.stringify(data.nickname));
+      localStorage.setItem("user_email", JSON.stringify(data.user_email));
+      localStorage.setItem("profile_img", JSON.stringify(data.profile_img));
+      localStorage.setItem("role", response.data.role);
 
-      // nickname을 환영 메시지로 설정
-      window.confirm(`${data.nickname}님, 환영합니다!`);
-
-      // 1초 후 리다이렉트
-      setTimeout(() => {
-        navigate("/"); // 경로만 설정 ("/"는 루트로 리다이렉트)
-      }, 1000);
+      if (window.confirm(`${data.nickname}님, 환영합니다!`)) {
+        // 확인 버튼 클릭 시 리다이렉트
+        navigate("/");
+      }
+      setToken(data.access_token);
+      setIsAdmin(data.role === "admin");
+      setIsLoggedIn(true);
     } catch (err) {
-      setError("다시 시도해주세요");
+      if (err.response) {
+        // 객체에서 적절한 메시지를 추출
+        const errorMessage = err.response.data.msg || "로그인에 실패했습니다.";
+        setError(errorMessage);
+      } else if (err.request) {
+        setError("서버로부터 응답이 없습니다. 다시 시도해주세요.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="app" data-theme={theme}>
+    <div className="app">
       <div className="login">
         <h1>Login</h1>
         <div className="container">
@@ -101,6 +102,6 @@ function Login() {
       </div>
     </div>
   );
-}
+};
 
 export default Login;
