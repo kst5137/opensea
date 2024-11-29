@@ -16,11 +16,6 @@ const Signup = () => {
   const [passwordMatch, setPasswordMatch] = useState(true);
   const navigate = useNavigate();
 
-  const switchTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
