@@ -114,9 +114,7 @@ function Profile() {
         alert("사용자 정보가 성공적으로 업데이트되었습니다.");
 
       }
-      console.log('------------------------------------------')
-      console.log(response.data);
-      console.log('------------------------------------------')
+ 
       if (response.data.updated_user) {
         const updatedUser = response.data.updated_user.nickname;
         const storedProfileImage = response.data.updated_user.profile_img;
@@ -154,7 +152,7 @@ function Profile() {
         alert("요청 처리 중 오류가 발생했습니다.");
       }
       
-      console.error("Error:", error);
+
     }
   };
 
