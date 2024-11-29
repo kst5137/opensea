@@ -5,43 +5,64 @@ import { useNavigate } from 'react-router-dom';
 import MyNFT from '../components/MyNft';
 import "./styles/ProfileModal.css";
 import "./styles/Profile.css";
-
+import LoadingSpinner from '../components/Loading';
 function Profile() {
   const [showModal, setShowModal] = useState(false);
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
+  const [profileImage, setProfileImage] = useState("");
   const [Image, setImage] = useState("");
-  // const [Image, setImage] = useState("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
   const fileInput = useRef(null)
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 모달 프로필 이미지 관련 내용 부분
+  const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
   const handleImageChange = (e) => {
-  const file = e.target.files[0];
-    if (file) {
+    const file = e.target.files[0];
+
+    // 파일이 존재하고 확장자가 이미지인지 확인
+    if (file && file.type.startsWith("image/")) {
+      // 파일 크기 확인
+      if (file.size > MAX_FILE_SIZE) {
+        alert("파일 크기는 2MB를 초과할 수 없습니다.");
+        e.target.value = ""; // 선택 초기화
+        return;
+      }
+
+      // 이미지 미리보기 설정
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result);  // 이미지 상태 업데이트
       };
       reader.readAsDataURL(file);  // 파일을 데이터 URL로 읽기
+    } else {
+      alert("이미지 파일만 업로드 가능합니다.");
+      e.target.value = ""; // 선택 초기화
     }
   };
 
+
   const [user, setUser] = useState(null); // user 상태 추가
-  // const [profileImg, setProfileImg] = useState(null); // user 상태 추가
   const token = localStorage.getItem('access_token');
   const user_email = JSON.parse(localStorage.getItem('user_email'));
   const navigate = useNavigate(); // navigate 함수 선언
+
+  // 프로필에 보여지는 이미지
   useEffect(() => {
-    // localStorage에서 이미지 경로를 가져옵니다.
-    const userImagePath = JSON.parse(localStorage.getItem('profile_img'));
-    console.log("이미지 ㅈ경로",userImagePath);
-    // 이미지 경로가 있으면 해당 경로 사용, 없으면 기본 이미지 사용
-    if (userImagePath && userImagePath !== "") {
-      console.log(userImagePath);
-      setImage(userImagePath);
-    } else {
-      setImage("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png");
+    const storedProfileImage = JSON.parse(localStorage.getItem('profile_img'));
+    if (storedProfileImage) {
+      setProfileImage(storedProfileImage);
     }
   }, []);
+
+  // 로컬스토리지에 저장되는 이미지
+  useEffect(() => {
+    const userImagePath = JSON.parse(localStorage.getItem('profile_img'));
+    if (userImagePath && userImagePath !== "") {
+      setImage(userImagePath);
+    } 
+     }, []);
 
 
   useEffect(() => {
@@ -76,6 +97,7 @@ function Profile() {
       alert("로그인 토큰이 없습니다. 다시 로그인하세요.");
       return;
     }
+    setIsLoading(true);
     try {
       const response = await axios.put(
         "http://127.0.0.1:8000/mypage/",
@@ -88,22 +110,24 @@ function Profile() {
         }
       );
 
-      console.log('requestbody',requestBody);
-      console.log("프로필 수정 성공:", response.data);
+      if (response.status === 200) {
+        alert("사용자 정보가 성공적으로 업데이트되었습니다.");
+
+      }
+
 
       if (response.data.updated_user) {
         const updatedUser = response.data.updated_user.nickname;
-        const updateProfileImg = response.data.updated_user.profile_img;
+        const storedProfileImage = response.data.updated_user.profile_img;
         setUser(updatedUser);
+        setProfileImage(storedProfileImage);
         localStorage.setItem('nickname', JSON.stringify(updatedUser));
-        localStorage.setItem('profile_img', JSON.stringify(updateProfileImg));
-
+        localStorage.setItem('profile_img', JSON.stringify(storedProfileImage)); // 추가
       }
-      // console.log(JSON.parse(localStorage.getItem('user')))
-
+      setIsLoading(false);
       handleCloseModal();
     } catch (error) {
-      console.error("프로필 수정 실패:", error.response);
+      setIsLoading(false);
       if (error.response.status === 401) {
         alert("인증에 실패했습니다. 다시 로그인하세요.");
       } else {
@@ -125,7 +149,7 @@ function Profile() {
         <div className="profile-header">
           <div className="profile-header-1">
           <div className="profile-img-container">
-            <img src={Image} alt="Profile" className="profile-img" />
+            <img src={profileImage} alt="Profile" className="profile-img" />
           </div>
             <h2 className="profile-header-title">{user}</h2>
             <button type="button" className="profileupdate-btn" onClick={handleProfileUpdateClick}>프로필 수정</button>
@@ -135,49 +159,66 @@ function Profile() {
             {<MyNFT userEmail = {user_email}/>}
         </div>
       </div>
-        {showModal && (
+      {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>프로필 수정</h2>
-            <div className="profile-img-container-modal" onClick={() => fileInput.current.click()}>
-            <img src={Image} alt="Profile" className="profile-img" />
+            {isLoading ? (
+              <LoadingSpinner />
+      ) : (
+        <>
+            <div className="profile-section">
+              <div className="profileImageWrapper">
+                <img 
+                  src={Image} 
+                  alt="Profile" 
+                  className="profileImage"
+                  onClick={() => fileInput.current.click()}
+                />
+              </div>
+              <input
+                type="file"
+                ref={fileInput}
+                style={{ display: 'none' }}
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
+
+            <form onSubmit={handleSubmit} className="userDetailForm">
+              <div className="formGroup">
+                <label>닉네임:</label>
+                <input
+                  type="text"
+                  name="nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="새로운 닉네임"
+                />
+              </div>
+              
+              <div className="formGroup">
+                <label>새로운 비밀번호:</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="새로운 비밀번호"
+                />
+              </div>
+
+              <div className="buttonContainer">
+                <button type="submit" className="saveButton">수정하기</button>
+                <button type="button" className="cancelButton" onClick={handleCloseModal}>
+                  취소하기
+                </button>
+              </div>
+            </form>
+            </>
+      )}
           </div>
-          <input
-            type="file"
-            ref={fileInput}
-            style={{ display: 'none' }}
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="nickname">닉네임</label>
-              <input
-                type="text"
-                id="nickname"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="새로운 닉네임"
-              />
-            </div>
-            <div>
-              <label htmlFor="password">새로운 비밀번호</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="새로운 비밀번호"
-              />
-            </div>
-            {/* 버튼을 감싸는 div 추가 */}
-            <div className="button-container">
-              <button type="submit">수정하기</button>
-              <button type="button" onClick={handleCloseModal}>취소</button>
-            </div>
-          </form>
         </div>
-      </div>
       )}
     </div>
   );
