@@ -134,7 +134,7 @@ const Home = () => {
                   <div className="details">
                     <h3>{nft?.item_name || "Unnamed NFT"}</h3>
                     <p className="price" style={{ color: "#2081e2", fontWeight: "bold" }}>
-                      Price: {Number(nft?.sold_price || 0).toFixed(2)} ETH
+                      Price: {Number(nft?.sold_price || 0).toString()} ETH
                     </p>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ const Home = () => {
                 <div className="details">
                   <h3>{nft?.item_name || "Unnamed NFT"}</h3>
                   <p className="price" style={{ color: "#2081e2", fontWeight: "bold", margin: 3 }}>
-                    Price: {Number(nft?.sold_price || 0).toFixed(2)} ETH
+                    Price: {Number(nft?.sold_price || 0).toString()} ETH
                   </p>
                 </div>
               </div>

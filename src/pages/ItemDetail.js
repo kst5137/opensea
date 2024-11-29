@@ -150,9 +150,9 @@ const ItemDetail = () => {
 
   useEffect(() => {
     if (acceptedOffer && userEmail) {
-      console.log('Accepted offer email:', acceptedOffer.email);
-      console.log('Current user email:', userEmail.replace(/"/g, ''));
-      console.log('Is match:', acceptedOffer.email.trim().toLowerCase() === userEmail.replace(/"/g, '').trim().toLowerCase());
+      // console.log('Accepted offer email:', acceptedOffer.email);
+      // console.log('Current user email:', userEmail.replace(/"/g, ''));
+      // console.log('Is match:', acceptedOffer.email.trim().toLowerCase() === userEmail.replace(/"/g, '').trim().toLowerCase());
     }
   }, [acceptedOffer, userEmail]);
 
@@ -266,8 +266,6 @@ const ItemDetail = () => {
 
     const isAcceptedOfferUser = acceptedOffer && 
       acceptedOffer.email.trim().toLowerCase() === userEmail.replace(/"/g, '').trim().toLowerCase();
-    console.log("test");
-    console.log(isAcceptedOfferUser);
     if (acceptedOffer && !isAcceptedOfferUser) {
       alert('이 상품은 제안이 수락된 사용자만 구매할 수 있습니다.');
       return;
@@ -305,6 +303,7 @@ const ItemDetail = () => {
     .then(async () => {
       try {
         await axios.put(`/posts/${itemId}/sold`, {
+          user_email: userEmail,
           sold_price: finalPrice,
           offer_id: isAcceptedOfferUser ? acceptedOffer.id : null
         });
