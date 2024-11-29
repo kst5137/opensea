@@ -26,7 +26,7 @@ function Explore(){
         <div className="card-content">
             <h3>{nft?.nft?.name || "Unnamed NFT"}</h3>
             <p className="price" style={{ color: '#2081e2', fontWeight: 'bold' }}>
-            Price: {Number(nft?.price || 0).toFixed(2)} ETH
+            Price: {Number(nft?.price || 0).toString()} ETH
             </p>
         </div>
         </div>
