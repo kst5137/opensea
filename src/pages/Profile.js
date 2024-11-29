@@ -16,7 +16,7 @@ function Profile() {
   const [isLoading, setIsLoading] = useState(false);
 
   // 모달 프로필 이미지 관련 내용 부분
-  const MAX_FILE_SIZE = 2 * 1024 * 1024;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -114,13 +114,16 @@ function Profile() {
         alert("사용자 정보가 성공적으로 업데이트되었습니다.");
 
       }
-
-
+      console.log('------------------------------------------')
+      console.log(response.data);
+      console.log('------------------------------------------')
       if (response.data.updated_user) {
         const updatedUser = response.data.updated_user.nickname;
         const storedProfileImage = response.data.updated_user.profile_img;
+        
         setUser(updatedUser);
         setProfileImage(storedProfileImage);
+
         localStorage.setItem('nickname', JSON.stringify(updatedUser));
         localStorage.setItem('profile_img', JSON.stringify(storedProfileImage)); // 추가
       }
@@ -128,13 +131,33 @@ function Profile() {
       handleCloseModal();
     } catch (error) {
       setIsLoading(false);
-      if (error.response.status === 401) {
-        alert("인증에 실패했습니다. 다시 로그인하세요.");
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            alert(error.response.data.detail);
+            break;
+          case 401:
+            alert("인증에 실패했습니다. 다시 로그인하세요.");
+            break;
+          case 404:
+            alert("사용자를 찾을 수 없습니다.");
+            break;
+          case 500:
+            alert("서버 오류가 발생했습니다.");
+            break;
+          default:
+            alert("오류가 발생했습니다.");
+        }
+      } else if (error.request) {
+        alert("서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.");
       } else {
-        alert("오류가 발생했습니다.");
+        alert("요청 처리 중 오류가 발생했습니다.");
       }
+      
+      console.error("Error:", error);
     }
   };
+
   
 
   return (
